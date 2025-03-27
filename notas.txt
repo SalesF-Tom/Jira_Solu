@@ -1,0 +1,53 @@
+# -------------== Politicas de Script Habilitar ==-------
+Get-ExecutionPolicy -List
+Get-ExecutionPolicy -Scope CurrentUser
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
+
+# -------------------------------------------------
+# dependencias aisladas del sistema
+python -m venv myenv
+
+# activa el entorno virtual En Windows: 
+myenv\Scripts\activate
+
+# Lista de dependencias
+pip list
+pip cache purge
+python --version
+
+
+# INSTALO requirements: 
+pip install -r requirements.txt
+
+# Activo variables de entorno
+pip install python-dotenv
+
+
+pip show google-cloud-bigquery google-auth
+
+
+Códigos de Color ANSI
+Colores de Texto
+\033[0m - Reset (resetea todos los atributos)
+\033[30m - Negro
+\033[31m - Rojo
+\033[32m - Verde
+\033[33m - Amarillo
+\033[34m - Azul
+\033[35m - Magenta
+\033[36m - Cian
+\033[37m - Blanco
+Colores de Fondo
+\033[40m - Fondo Negro
+\033[41m - Fondo Rojo
+\033[42m - Fondo Verde
+\033[43m - Fondo Amarillo
+\033[44m - Fondo Azul
+\033[45m - Fondo Magenta
+\033[46m - Fondo Cian
+\033[47m - Fondo Blanco
+Estilos de Texto
+\033[1m - Negrita
+\033[2m - Difuminado
+\033[4m - Subrayado
+\033[7m - Invertido
