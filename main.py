@@ -6,10 +6,10 @@ import schedule
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
 
-# Importar cliente de BigQuery
+# Cliente de BigQuery
 from bigquery.bigquery_func import Get_BQ_service
 
-# Importar esquemas y funciones de merge
+# Esquemas y merges
 from schema.schemas import Esquema
 from bigquery.querys import (
     Merge_Data_Projects_BQ,
@@ -17,30 +17,32 @@ from bigquery.querys import (
     Merge_Data_Tickets_BQ,
 )
 
-# Importar capa ETL modular
+# ETL modular
 from etl.extractor import get_raw_projects, get_raw_sprints, get_raw_tickets
 from etl.transformer import clean_projects, clean_sprints, clean_tickets
 from etl.loader import cargar_entidad
 
-# Cargar variables de entorno
+# Logger y notificaciones
+from utils.logger import configurar_logger
+from utils.discord_notify import enviar_resumen_discord
+
+# Configuración de entorno
 load_dotenv()
 
-# Autenticación Jira
 auth = os.getenv("AUTHORIZATION")
 headers = {
     "Accept": "application/json",
     "Authorization": auth
 }
 
-# Configuración de credenciales de Google
 CREDENTIALS_PATH = "./credenciales/data-warehouse-311917-73a0792225c7.json"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS_PATH
 TIMEZONE = pytz.timezone("America/Argentina/Buenos_Aires")
 
-# Cliente de BigQuery
 client = Get_BQ_service()
+logger = configurar_logger()
+resumen = []
 
-# Mapeo de entidades ETL
 ENTIDADES = [
     {
         "nombre": "Projects",
@@ -70,12 +72,17 @@ ENTIDADES = [
 
 def ejecutar_entidad(entidad, filtro):
     try:
-        print(f"\033[33mProcesando {entidad['nombre']}...\033[0m")
+        logger.info(f"Procesando {entidad['nombre']}...")
         df_raw = entidad["extract"](headers, filtro)
         df_clean = entidad["transform"](df_raw)
         cargar_entidad(client, entidad, df_clean)
+        filas = len(df_clean)
+        resumen.append(f"✅ {entidad['nombre']}: {filas} filas procesadas")
+        logger.info(f"{entidad['nombre']}: {filas} filas cargadas.")
     except Exception as e:
-        print(f"\033[31mError procesando {entidad['nombre']}: {e}\033[0m")
+        mensaje = f"❌ Error procesando {entidad['nombre']}: {e}"
+        logger.error(mensaje)
+        resumen.append(mensaje)
 
 def main(tipo="diario"):
     inicio = time.time()
@@ -84,7 +91,10 @@ def main(tipo="diario"):
         for future in futures:
             future.result()
     fin = time.time()
-    print(f"\nDuración total: {fin - inicio:.2f} segundos.\n")
+    duracion = f"⏱️ Duración total: {fin - inicio:.2f} segundos"
+    resumen.append(duracion)
+    logger.info(duracion)
+    enviar_resumen_discord("**Resumen ETL Jira**\n" + "\n".join(resumen))
 
 def ejecutar_tareas(historico=False):
     if historico:
@@ -104,7 +114,7 @@ def ejecutar_tareas(historico=False):
 
 if __name__ == "__main__":
     try:
-        ejecutar_tareas(historico=False)  # Cambiá a False para ejecución diaria
+        ejecutar_tareas(historico=True)
         while True:
             schedule.run_pending()
             time.sleep(60)
