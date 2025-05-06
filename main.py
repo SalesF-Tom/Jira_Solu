@@ -32,7 +32,7 @@ load_dotenv()
 auth = os.getenv("AUTHORIZATION")
 headers = {
     "Accept": "application/json",
-    "Authorization": auth
+    "Authorization": "Basic " + auth
 }
 
 CREDENTIALS_PATH = "./credenciales/data-warehouse-311917-73a0792225c7.json"
@@ -70,6 +70,7 @@ ENTIDADES = [
     },
 ]
 
+
 def ejecutar_entidad(entidad, filtro):
     try:
         logger.info(f"Procesando {entidad['nombre']}...")
@@ -84,6 +85,7 @@ def ejecutar_entidad(entidad, filtro):
         logger.error(mensaje)
         resumen.append(mensaje)
 
+
 def main(tipo="diario"):
     inicio = time.time()
     with ThreadPoolExecutor(max_workers=3) as executor:
@@ -95,6 +97,7 @@ def main(tipo="diario"):
     resumen.append(duracion)
     logger.info(duracion)
     enviar_resumen_discord("**Resumen ETL Jira**\n" + "\n".join(resumen))
+
 
 def ejecutar_tareas(historico=False):
     if historico:
@@ -112,11 +115,13 @@ def ejecutar_tareas(historico=False):
             print("Ejecución diaria")
             main("diario")
 
+
 if __name__ == "__main__":
-    try:
-        ejecutar_tareas(historico=True)
-        while True:
-            schedule.run_pending()
-            time.sleep(60)
-    except KeyboardInterrupt:
-        print("Scheduler detenido manualmente.")
+    main("diario")
+    # try:
+    #     ejecutar_tareas(historico=False)
+    #     while True:
+    #         schedule.run_pending()
+    #         time.sleep(60)
+    # except KeyboardInterrupt:
+    #     print("Scheduler detenido manualmente.")

@@ -1,10 +1,14 @@
 # etl/loader.py
 from bigquery.bigquery_func import Insertar_Datos_BQ
+import os
 from bigquery.querys import (
     Merge_Data_Projects_BQ,
     Merge_Data_Sprints_BQ,
     Merge_Data_Tickets_BQ,
 )
+
+datasetFinal = os.getenv("DATASET_FINAL")
+datasetTemp = os.getenv("DATASET_TEMP")
 
 def cargar_entidad(client, entidad, df):
     if df.empty:
@@ -17,6 +21,6 @@ def cargar_entidad(client, entidad, df):
 
     entidad["merge_func"](
         client,
-        f"data-warehouse-311917.Jira.{entidad['tabla_final']}",
-        f"data-warehouse-311917.zt_productive_temp.{entidad['tabla_final']}_temp",
+        f"data-warehouse-311917.{datasetFinal}.{entidad['tabla_final']}",
+        f"data-warehouse-311917.{datasetTemp}.{entidad['tabla_final']}_temp",
     )

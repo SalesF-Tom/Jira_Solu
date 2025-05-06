@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 def Get_BQ_service():
     credentials_path = './credenciales/data-warehouse-311917-73a0792225c7.json'
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
