@@ -76,9 +76,9 @@ def ejecutar_entidad(entidad, filtro):
         logger.info(f"Procesando {entidad['nombre']}...")
         df_raw = entidad["extract"](headers, filtro)
         df_clean = entidad["transform"](df_raw)
-        cargar_entidad(logger, client, entidad, df_clean)
+        mbytes_fac = cargar_entidad(logger, client, entidad, df_clean)
         filas = len(df_clean)
-        resumen.append(f"✅ {entidad['nombre']}: {filas} filas procesadas")
+        resumen.append(f"✅ {entidad['nombre']}: {filas} filas procesadas | {mbytes_fac:.2f} MB Billied")
         logger.info(f"{entidad['nombre']}: {filas} filas cargadas.")
     except Exception as e:
         mensaje = f"❌ Error procesando {entidad['nombre']}: {e}"
@@ -106,7 +106,7 @@ def main(tipo="diario"):
     duracion = f"⏱️ Duración total: {fin - inicio:.2f} segundos"
     resumen.append(duracion)
     logger.info(duracion)
-    # enviar_resumen_discord("**Resumen ETL Jira**\n" + "\n".join(resumen))
+    enviar_resumen_discord("**Resumen ETL Jira**\n" + "\n".join(resumen))
 
 
 def ejecutar_tareas(historico=False):

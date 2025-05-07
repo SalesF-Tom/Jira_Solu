@@ -36,6 +36,7 @@ def Merge_Data_Projects_BQ(client, tabla_final, tabla_temp):
     bytes_facturados = query_job.estimated_bytes_processed
     megabytes_facturados = bytes_facturados / (1024 * 1024)
     print(f"Bytes facturados: {megabytes_facturados:.2f} MB")
+    return megabytes_facturados
 
 
 def Merge_Data_Sprints_BQ(client, tabla_final, tabla_temp):
@@ -79,6 +80,7 @@ def Merge_Data_Sprints_BQ(client, tabla_final, tabla_temp):
     bytes_facturados = query_job.estimated_bytes_processed
     megabytes_facturados = bytes_facturados / (1024 * 1024)
     print(f"Bytes facturados: {megabytes_facturados:.2f} MB")
+    return megabytes_facturados
 
 
 def Merge_Data_Tickets_BQ(client, tabla_final, tabla_temp):
@@ -132,5 +134,6 @@ def Merge_Data_Tickets_BQ(client, tabla_final, tabla_temp):
     bytes_facturados = query_job.estimated_bytes_processed
     megabytes_facturados = bytes_facturados / (1024 * 1024)
     print(f"Bytes facturados: {megabytes_facturados:.2f} MB")
+    return megabytes_facturados
 
 

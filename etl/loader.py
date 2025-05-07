@@ -25,8 +25,10 @@ def cargar_entidad(logger, client, entidad, df):
         metodo="WRITE_TRUNCATE"
     )
 
-    entidad["merge_func"](
+    mb_fac = entidad["merge_func"](
         client,
         f"data-warehouse-311917.{datasetFinal}.{entidad['tabla_final']}",
         f"data-warehouse-311917.{datasetTemp}.{entidad['tabla_final']}_temp",
     )
+
+    return mb_fac
