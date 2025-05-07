@@ -76,7 +76,7 @@ def ejecutar_entidad(entidad, filtro):
         logger.info(f"Procesando {entidad['nombre']}...")
         df_raw = entidad["extract"](headers, filtro)
         df_clean = entidad["transform"](df_raw)
-        cargar_entidad(client, entidad, df_clean)
+        cargar_entidad(logger, client, entidad, df_clean)
         filas = len(df_clean)
         resumen.append(f"✅ {entidad['nombre']}: {filas} filas procesadas")
         logger.info(f"{entidad['nombre']}: {filas} filas cargadas.")
@@ -87,16 +87,26 @@ def ejecutar_entidad(entidad, filtro):
 
 
 def main(tipo="diario"):
+    print(f"---== Ejecutando Extract {tipo} ==---")
     inicio = time.time()
+
+    # ----------------------- LO SACO PARA TESTEAR TIEMPOS -----------------------
     with ThreadPoolExecutor(max_workers=3) as executor:
+        print(f"---== Ejecutando Hilo ==---")
         futures = [executor.submit(ejecutar_entidad, entidad, tipo) for entidad in ENTIDADES]
         for future in futures:
             future.result()
+    # ----------------------- ----------------------- -----------------------
+
+    # print(f"---== Ejecutando entidades secuencialmente ==---")
+    # for entidad in ENTIDADES:
+    #     ejecutar_entidad(entidad, tipo)
+    
     fin = time.time()
     duracion = f"⏱️ Duración total: {fin - inicio:.2f} segundos"
     resumen.append(duracion)
     logger.info(duracion)
-    enviar_resumen_discord("**Resumen ETL Jira**\n" + "\n".join(resumen))
+    # enviar_resumen_discord("**Resumen ETL Jira**\n" + "\n".join(resumen))
 
 
 def ejecutar_tareas(historico=False):
@@ -117,7 +127,8 @@ def ejecutar_tareas(historico=False):
 
 
 if __name__ == "__main__":
-    main("diario")
+    # main()
+    ejecutar_tareas(historico=False)
     # try:
     #     ejecutar_tareas(historico=False)
     #     while True:

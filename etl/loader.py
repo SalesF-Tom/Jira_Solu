@@ -10,13 +10,19 @@ from bigquery.querys import (
 datasetFinal = os.getenv("DATASET_FINAL")
 datasetTemp = os.getenv("DATASET_TEMP")
 
-def cargar_entidad(client, entidad, df):
+def cargar_entidad(logger, client, entidad, df):
     if df.empty:
         print(f"No hay datos para {entidad['nombre']}.")
         return
 
     Insertar_Datos_BQ(
-        client, entidad["schema"], entidad["tabla_final"], df, "temp", metodo="WRITE_TRUNCATE"
+        logger, 
+        client,
+        entidad["schema"],
+        entidad["tabla_final"],
+        df,
+        "temp",
+        metodo="WRITE_TRUNCATE"
     )
 
     entidad["merge_func"](

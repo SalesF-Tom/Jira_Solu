@@ -28,9 +28,14 @@ def Merge_Data_Projects_BQ(client, tabla_final, tabla_temp):
             B.board_id, B.board_name, B.board_type, B.project_key, B.project_name, B.project_location
         )
     """
+    # print(merge_query)
+
     query_job = client.query(merge_query)
     query_job.result()
     print(f"\033[35m Se actualizaron {query_job.num_dml_affected_rows} filas en la tabla {tabla_final}. \033[0m")
+    bytes_facturados = query_job.estimated_bytes_processed
+    megabytes_facturados = bytes_facturados / (1024 * 1024)
+    print(f"Bytes facturados: {megabytes_facturados:.2f} MB")
 
 
 def Merge_Data_Sprints_BQ(client, tabla_final, tabla_temp):
@@ -65,9 +70,15 @@ def Merge_Data_Sprints_BQ(client, tabla_final, tabla_temp):
             B.sprint_startDate, B.sprint_endDate, B.sprint_completeDate, B.sprint_goal
         )
     """
+
+    # print(merge_query)
+
     query_job = client.query(merge_query)
     query_job.result()
     print(f"\033[35m Se actualizaron {query_job.num_dml_affected_rows} filas en la tabla {tabla_final}. \033[0m")
+    bytes_facturados = query_job.estimated_bytes_processed
+    megabytes_facturados = bytes_facturados / (1024 * 1024)
+    print(f"Bytes facturados: {megabytes_facturados:.2f} MB")
 
 
 def Merge_Data_Tickets_BQ(client, tabla_final, tabla_temp):
@@ -112,8 +123,14 @@ def Merge_Data_Tickets_BQ(client, tabla_final, tabla_temp):
             B.ticket_priority, B.ticket_type, B.ticket_created, B.ticket_original_estimate, B.ticket_updated, B.ticket_resolution, B.ticket_labels
         )
     """
+
+    # print(merge_query)
+
     query_job = client.query(merge_query)
     query_job.result()
     print(f"\033[35m Se actualizaron {query_job.num_dml_affected_rows} filas en la tabla {tabla_final}. \033[0m")
+    bytes_facturados = query_job.estimated_bytes_processed
+    megabytes_facturados = bytes_facturados / (1024 * 1024)
+    print(f"Bytes facturados: {megabytes_facturados:.2f} MB")
 
 

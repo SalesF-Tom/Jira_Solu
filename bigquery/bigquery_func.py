@@ -17,28 +17,25 @@ def Get_BQ_service():
     return clientBQ
 
 
-def Insertar_Datos_BQ(client, schema, nombre_tabla, df_panda, tipo, metodo="WRITE_APPEND"):
+def Insertar_Datos_BQ(logger, client, schema, nombre_tabla, df_panda, tipo, metodo="WRITE_TRUNCATE"):
     if tipo == "temp":
         dataset_id = os.getenv("DATASET_TEMP")
         prefijo = "_temp"
+        nombre_tablaTemp = nombre_tabla + prefijo
+        logger.info(f"Se cargaron en el DataSet : {(os.getenv("DATASET_TEMP"))} a la tabla {nombre_tablaTemp}.")
 
     elif tipo == "final":
         dataset_id = os.getenv("DATASET_FINAL")
         prefijo = ""
+        nombre_tablaTemp = nombre_tabla + prefijo
     else:
         print("Tipo de dataset no válido.")
         return
 
-    filas_cargadas = Cargar_CSV_a_BigQuery(client, dataset_id, nombre_tabla+prefijo, schema, df_panda, tipo,  metodo=metodo)
+    filas_cargadas = Cargar_CSV_a_BigQuery(logger, client, dataset_id, nombre_tablaTemp , schema, df_panda, tipo,  metodo=metodo)
 
 
-def Insertar_Datos_BQ_primeravez(client, schema, nombre_tabla, df_panda, tipo, metodo="WRITE_APPEND"):
-       dataset_id = os.getenv("DATASET_FINAL")
-       Cargar_CSV_a_BigQuery(client, dataset_id, nombre_tabla, schema, df_panda, tipo,  metodo=metodo)
-
-
-
-def Cargar_CSV_a_BigQuery(client, dataset_id, table_id, schema, df_panda, tipo, metodo):
+def Cargar_CSV_a_BigQuery(logger, client, dataset_id, table_id, schema, df_panda, tipo, metodo):
      # Forzar pandas a leer las columnas problemáticas como string
     dtype = {
         'date_': 'datetime'
@@ -65,6 +62,12 @@ def Cargar_CSV_a_BigQuery(client, dataset_id, table_id, schema, df_panda, tipo, 
         table.expires = expiration_time
         client.update_table(table, ["expires"])
     
-    print(f"\033[32m Se cargaron {len(df_panda)} a la tabla {table_id}. \033[0m")
+    logger.info(f"Se cargaron {len(df_panda)} registros en el DataSet {dataset_id} en la tabla {table_id}.")
 
     return len(df_panda)
+
+
+
+def Insertar_Datos_BQ_primeravez(client, schema, nombre_tabla, df_panda, tipo, metodo="WRITE_TRUNCATE"):
+       dataset_id = os.getenv("DATASET_FINAL")
+       Cargar_CSV_a_BigQuery(client, dataset_id, nombre_tabla, schema, df_panda, tipo,  metodo=metodo)
