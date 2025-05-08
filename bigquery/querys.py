@@ -6,13 +6,14 @@ def Merge_Data_Projects_BQ(client, tabla_final, tabla_temp):
         USING (SELECT DISTINCT * FROM `{tabla_temp}`) B
         ON A.board_id = B.board_id
         
-        WHEN MATCHED AND (
-            A.board_name IS DISTINCT FROM B.board_name OR
-            A.board_type IS DISTINCT FROM B.board_type OR
-            A.project_key IS DISTINCT FROM B.project_key OR
-            A.project_name IS DISTINCT FROM B.project_name OR
-            A.project_location IS DISTINCT FROM B.project_location
-        )
+        WHEN MATCHED
+        #   AND (
+        #     A.board_name IS DISTINCT FROM B.board_name OR
+        #     A.board_type IS DISTINCT FROM B.board_type OR
+        #     A.project_key IS DISTINCT FROM B.project_key OR
+        #     A.project_name IS DISTINCT FROM B.project_name OR
+        #     A.project_location IS DISTINCT FROM B.project_location
+        # )
         THEN UPDATE SET
             A.board_name = B.board_name,
             A.board_type = B.board_type,
@@ -45,14 +46,15 @@ def Merge_Data_Sprints_BQ(client, tabla_final, tabla_temp):
         USING (SELECT DISTINCT * FROM `{tabla_temp}`) B
         ON A.sprint_id = B.sprint_id AND A.board_id = B.board_id
 
-        WHEN MATCHED AND (
-            A.sprint_name IS DISTINCT FROM B.sprint_name OR
-            A.sprint_state IS DISTINCT FROM B.sprint_state OR
-            A.sprint_startDate IS DISTINCT FROM B.sprint_startDate OR
-            A.sprint_endDate IS DISTINCT FROM B.sprint_endDate OR
-            A.sprint_completeDate IS DISTINCT FROM B.sprint_completeDate OR
-            A.sprint_goal IS DISTINCT FROM B.sprint_goal
-        )
+        WHEN MATCHED
+            # AND (
+            #     A.sprint_name IS DISTINCT FROM B.sprint_name OR
+            #     A.sprint_state IS DISTINCT FROM B.sprint_state OR
+            #     A.sprint_startDate IS DISTINCT FROM B.sprint_startDate OR
+            #     A.sprint_endDate IS DISTINCT FROM B.sprint_endDate OR
+            #     A.sprint_completeDate IS DISTINCT FROM B.sprint_completeDate OR
+            #     A.sprint_goal IS DISTINCT FROM B.sprint_goal
+            # )
         THEN UPDATE SET
             A.sprint_name = B.sprint_name,
             A.sprint_state = B.sprint_state,
@@ -89,19 +91,20 @@ def Merge_Data_Tickets_BQ(client, tabla_final, tabla_temp):
         USING (SELECT DISTINCT * FROM `{tabla_temp}`) B
         ON A.ticket_id = B.ticket_id AND A.sprint_id = B.sprint_id
 
-        WHEN MATCHED AND (
-            A.ticket_key IS DISTINCT FROM B.ticket_key OR
-            A.ticket_summary IS DISTINCT FROM B.ticket_summary OR
-            A.ticket_status IS DISTINCT FROM B.ticket_status OR
-            A.ticket_assignee IS DISTINCT FROM B.ticket_assignee OR
-            A.ticket_priority IS DISTINCT FROM B.ticket_priority OR
-            A.ticket_type IS DISTINCT FROM B.ticket_type OR
-            A.ticket_created IS DISTINCT FROM B.ticket_created OR
-            A.ticket_original_estimate IS DISTINCT FROM B.ticket_original_estimate OR
-            A.ticket_updated IS DISTINCT FROM B.ticket_updated OR
-            A.ticket_resolution IS DISTINCT FROM B.ticket_resolution OR
-            A.ticket_labels IS DISTINCT FROM B.ticket_labels
-        )
+        WHEN MATCHED
+            # AND (
+            #     A.ticket_key IS DISTINCT FROM B.ticket_key OR
+            #     A.ticket_summary IS DISTINCT FROM B.ticket_summary OR
+            #     A.ticket_status IS DISTINCT FROM B.ticket_status OR
+            #     A.ticket_assignee IS DISTINCT FROM B.ticket_assignee OR
+            #     A.ticket_priority IS DISTINCT FROM B.ticket_priority OR
+            #     A.ticket_type IS DISTINCT FROM B.ticket_type OR
+            #     A.ticket_created IS DISTINCT FROM B.ticket_created OR
+            #     A.ticket_original_estimate IS DISTINCT FROM B.ticket_original_estimate OR
+            #     A.ticket_updated IS DISTINCT FROM B.ticket_updated OR
+            #     A.ticket_resolution IS DISTINCT FROM B.ticket_resolution OR
+            #     A.ticket_labels IS DISTINCT FROM B.ticket_labels
+            # )
         THEN UPDATE SET
             A.ticket_key = B.ticket_key,
             A.ticket_summary = B.ticket_summary,

@@ -78,7 +78,7 @@ def ejecutar_entidad(entidad, filtro):
         df_clean = entidad["transform"](df_raw)
         mbytes_fac = cargar_entidad(logger, client, entidad, df_clean)
         filas = len(df_clean)
-        resumen.append(f"✅ {entidad['nombre']}: {filas} filas procesadas | {mbytes_fac:.2f} MB Billied")
+        resumen.append(f"✅ {entidad['nombre']}: {filas} filas procesadas | {mbytes_fac:.2f} MB Billed")
         logger.info(f"{entidad['nombre']}: {filas} filas cargadas.")
     except Exception as e:
         mensaje = f"❌ Error procesando {entidad['nombre']}: {e}"
