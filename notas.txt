@@ -1,3 +1,18 @@
+git pull origin main && python3 -m venv myenv && source myenv/bin/activate && pip install -r requirements.txt
+
+
+git init
+git add .
+git commit -m "Initial commit: Estructura base del repositorio"
+git remote set-url origin https://github.com/SalesF-Tom/Jira_Solu
+git remote add origin https://github.com/SalesF-Tom/Jira_Solu
+git push -u origin main
+
+git branch
+
+git push -f origin main
+
+
 # -------------== Politicas de Script Habilitar ==-------
 Get-ExecutionPolicy -List
 Get-ExecutionPolicy -Scope CurrentUser
