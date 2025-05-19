@@ -1,13 +1,10 @@
-<<<<<<< HEAD
 __pycache__/
-=======
-# Entorno virtual
->>>>>>> b5d54ff (Optimización: paralelización, paginación y validación en pipeline ETL Jira)
 myenv/
 
 # Archivos sensibles
 .env
-credenciales/
+credencialesbq.json
+data-warehouse-311917-73a0792225c7.json
 
 # Python cache
 __pycache__/
