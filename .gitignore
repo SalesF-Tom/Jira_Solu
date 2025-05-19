@@ -1,4 +1,35 @@
+<<<<<<< HEAD
 __pycache__/
+=======
+# Entorno virtual
+>>>>>>> b5d54ff (Optimización: paralelización, paginación y validación en pipeline ETL Jira)
 myenv/
-credenciales/
+
+# Archivos sensibles
 .env
+credenciales/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Logs y archivos temporales
+*.log
+*.tmp
+*.bak
+
+# Archivos de salida/exportación
+*.csv
+*.xlsx
+*.json
+
+# Metadata de paquetes
+*.egg-info/
+
+# Configs de IDEs
+.vscode/
+.idea/
+
+# Otros
+.DS_Store

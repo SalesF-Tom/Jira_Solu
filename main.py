@@ -1,58 +1,69 @@
 import os
 from datetime import datetime
 import pytz
+import time
 import schedule
 from dotenv import load_dotenv
-import time
-from bigquery.bigquery_func import Get_BQ_service, Insertar_Datos_BQ
+from concurrent.futures import ThreadPoolExecutor
+
+# Cliente de BigQuery
+from bigquery.bigquery_func import Get_BQ_service
+
+# Esquemas y merges
 from schema.schemas import Esquema
-from funciones.projects import get_projects
-from funciones.tickets import  get_tickets
-from funciones.sprints import get_sprints
 from bigquery.querys import (
     Merge_Data_Projects_BQ,
     Merge_Data_Sprints_BQ,
     Merge_Data_Tickets_BQ,
 )
 
+# ETL modular
+from etl.extractor import get_raw_projects, get_raw_sprints, get_raw_tickets
+from etl.transformer import clean_projects, clean_sprints, clean_tickets
+from etl.loader import cargar_entidad
+
+# Logger y notificaciones
+from utils.logger import configurar_logger
+from utils.discord_notify import enviar_resumen_discord
+
+# Configuración de entorno
 load_dotenv()
 
-# Recuperar las credenciales desde las variables de entorno
-auth = os.getenv("AUTHORIZATION")  # Auth de Jira
-
-# Crear el diccionario headers
+auth = os.getenv("AUTHORIZATION")
 headers = {
     "Accept": "application/json",
-    "Authorization": auth
+    "Authorization": "Basic " + auth
 }
 
-# Configuración de credenciales
 CREDENTIALS_PATH = "./credenciales/data-warehouse-311917-73a0792225c7.json"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS_PATH
 TIMEZONE = pytz.timezone("America/Argentina/Buenos_Aires")
 
-# Cliente de BigQuery
 client = Get_BQ_service()
+logger = configurar_logger()
+resumen = []
 
-# Mapeo de funciones y esquemas
 ENTIDADES = [
     {
         "nombre": "Projects",
-        "func_get": get_projects,
+        "extract": get_raw_projects,
+        "transform": clean_projects,
         "schema": Esquema.schema_projects,
         "tabla_final": "tbl_jira_projects",
         "merge_func": Merge_Data_Projects_BQ,
     },
     {
         "nombre": "Sprints",
-        "func_get": get_sprints,
+        "extract": get_raw_sprints,
+        "transform": clean_sprints,
         "schema": Esquema.schema_sprints,
         "tabla_final": "tbl_jira_sprints",
         "merge_func": Merge_Data_Sprints_BQ,
     },
     {
         "nombre": "Tickets",
-        "func_get": get_tickets,
+        "extract": get_raw_tickets,
+        "transform": clean_tickets,
         "schema": Esquema.schema_tickets,
         "tabla_final": "tbl_jira_tickets",
         "merge_func": Merge_Data_Tickets_BQ,
@@ -61,44 +72,53 @@ ENTIDADES = [
 
 
 def ejecutar_entidad(entidad, filtro):
-    """Ejecuta el flujo de carga y merge para una entidad."""
     try:
-        print(f"\033[33m {entidad['nombre']}: \033[0m")
-        data = entidad["func_get"](headers, filtro)
-        if not data.empty:
-            Insertar_Datos_BQ(client, entidad["schema"], entidad["tabla_final"], data, "temp", "WRITE_TRUNCATE")
-            entidad["merge_func"](
-                client,
-                f"data-warehouse-311917.Jira.{entidad['tabla_final']}",
-                f"data-warehouse-311917.zt_productive_temp.{entidad['tabla_final']}_temp",
-            )
-        else:
-            print(f"No hay datos para {entidad['nombre']}.")
+        logger.info(f"Procesando {entidad['nombre']}...")
+        df_raw = entidad["extract"](headers, filtro)
+        df_clean = entidad["transform"](df_raw)
+        mbytes_fac = cargar_entidad(logger, client, entidad, df_clean)
+        filas = len(df_clean)
+        resumen.append(f"✅ {entidad['nombre']}: {filas} filas procesadas | {mbytes_fac:.2f} MB Billed")
+        logger.info(f"{entidad['nombre']}: {filas} filas cargadas.")
     except Exception as e:
-        print(f"\033[31m Error procesando {entidad['nombre']}: {e} \033[0m")
+        mensaje = f"❌ Error procesando {entidad['nombre']}: {e}"
+        logger.error(mensaje)
+        resumen.append(mensaje)
 
 
 def main(tipo="diario"):
-    """Ejecución principal."""
-    inicio_ejecucion = time.time()
-    for entidad in ENTIDADES:
-        ejecutar_entidad(entidad, filtro=tipo)
-    fin_ejecucion = time.time()
-    print(f'Duración de ejecución: {fin_ejecucion-inicio_ejecucion}')
-    print("Esperando la hora programada...")
+    print(f"---== Ejecutando Extract {tipo} ==---")
+    inicio = time.time()
+
+    # ----------------------- LO SACO PARA TESTEAR TIEMPOS -----------------------
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        print(f"---== Ejecutando Hilo ==---")
+        futures = [executor.submit(ejecutar_entidad, entidad, tipo) for entidad in ENTIDADES]
+        for future in futures:
+            future.result()
+    # ----------------------- ----------------------- -----------------------
+
+    # print(f"---== Ejecutando entidades secuencialmente ==---")
+    # for entidad in ENTIDADES:
+    #     ejecutar_entidad(entidad, tipo)
+    
+    fin = time.time()
+    duracion = f"⏱️ Duración total: {fin - inicio:.2f} segundos"
+    resumen.append(duracion)
+    logger.info(duracion)
+    enviar_resumen_discord("**Resumen ETL Jira**\n" + "\n".join(resumen))
 
 
 def ejecutar_tareas(historico=False):
-    """Planificador de tareas."""
-    if historico : 
-        print('Ejecución histórica')
-        main('historico')
+    if historico:
+        print("Ejecución histórica")
+        main("historico")
     else:
         hoy = datetime.now(TIMEZONE)
-        if hoy.weekday() == 0:  # Lunes
+        if hoy.weekday() == 0:
             print("Ejecución semanal")
             main("semanal")
-        elif hoy.day == 1:  # Primer día del mes
+        elif hoy.day == 1:
             print("Ejecución mensual")
             main("mensual")
         else:
@@ -106,22 +126,13 @@ def ejecutar_tareas(historico=False):
             main("diario")
 
 
-
 if __name__ == "__main__":
-    try:
-        # schedule.every().day.at("02:00").do(ejecutar_tareas)
-        # print("Esperando la hora programada...")
-        # ejecutar_tareas()
-        ejecutar_tareas(True) #histórico 
-
-        while True:
-            schedule.run_pending()
-            time.sleep(60)
-
-    except KeyboardInterrupt:
-        print("Scheduler detenido manualmente.")
-
-
-
-
-
+    # main()
+    ejecutar_tareas(historico=False)
+    # try:
+    #     ejecutar_tareas(historico=False)
+    #     while True:
+    #         schedule.run_pending()
+    #         time.sleep(60)
+    # except KeyboardInterrupt:
+    #     print("Scheduler detenido manualmente.")

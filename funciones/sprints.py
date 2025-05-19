@@ -6,7 +6,7 @@ from funciones.projects import get_projects
 def get_sprints(headers, filtro="diario"):
     """
     Obtiene sprints actualizados según el filtro especificado (diario, semanal, mensual, historico).
-    
+
     :param headers: Encabezados para la autenticación en la API
     :param filtro: Frecuencia del filtro (diario, semanal, mensual, historico)
     :return: DataFrame con la información de los sprints
@@ -39,17 +39,20 @@ def get_sprints(headers, filtro="diario"):
         response = requests.get(url_sprints, headers=headers)
         if response.status_code != 200:
             continue
-        
+
         sprints = response.json().get("values", [])
         for sprint in sprints:
             sprint_end_date = pd.to_datetime(sprint.get("endDate", ""), errors="coerce", utc=True)
-            # Incluir todos los sprints si el filtro es historico, o aplicar la lógica de fechas
-            if filtro == "historico" or sprint_end_date is None or sprint_end_date >= fecha_inicio:
+            sprint_state = sprint.get("state", "")
+
+            if filtro == "historico" or (
+                sprint_end_date is not None and sprint_end_date >= fecha_inicio
+            ) or sprint_state != "closed":
                 all_sprints.append({
                     "board_id": board_id,
                     "sprint_id": str(sprint["id"]),
                     "sprint_name": sprint.get("name", ""),
-                    "sprint_state": sprint.get("state", ""),
+                    "sprint_state": sprint_state,
                     "sprint_startDate": sprint.get("startDate", ""),
                     "sprint_endDate": sprint.get("endDate", ""),
                     "sprint_completeDate": sprint.get("completeDate", ""),

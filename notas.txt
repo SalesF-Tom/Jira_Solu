@@ -10,6 +10,8 @@ python -m venv myenv
 # activa el entorno virtual En Windows: 
 myenv\Scripts\activate
 
+Unblock-File D:\DESARROLLO\TOMAS\Jira_Solu\myenv\Scripts\Activate.ps1
+
 # Lista de dependencias
 pip list
 pip cache purge

@@ -29,7 +29,7 @@ class Esquema(object):
     bigquery.SchemaField("ticket_priority", "STRING", mode="NULLABLE"),  # Ej: High, Medium, Low
     bigquery.SchemaField("ticket_type", "STRING", mode="NULLABLE"),  # Ej: Bug, Task, Story
     bigquery.SchemaField("ticket_created", "DATETIME", mode="NULLABLE"),
-    bigquery.SchemaField("ticket_original_estimate", "INTEGER", mode="NULLABLE"),
+    bigquery.SchemaField("ticket_original_estimate", "FLOAT", mode="NULLABLE"), # LO CAMBIE A FLOAT
     bigquery.SchemaField("ticket_updated", "DATETIME", mode="NULLABLE"),
     bigquery.SchemaField("ticket_resolution", "STRING", mode="NULLABLE"),  # Ej: Fixed, Won't Fix
     bigquery.SchemaField("ticket_labels", "STRING", mode="NULLABLE"),  # Comma-separated labels
