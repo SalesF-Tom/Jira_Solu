@@ -19,7 +19,6 @@ __pycache__/
 # Archivos de salida/exportación
 *.csv
 *.xlsx
-*.json
 
 # Metadata de paquetes
 *.egg-info/
@@ -28,5 +27,3 @@ __pycache__/
 .vscode/
 .idea/
 
-# Otros
-.DS_Store
