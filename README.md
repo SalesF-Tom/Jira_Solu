@@ -1,148 +1,69 @@
-# Jira Solu ETL
+# 🚀 ETL Jira → BigQuery → Looker
 
-Proyecto de extracción, transformación y carga (ETL) de datos desde la API de Jira a BigQuery para análisis de productividad y seguimiento de tickets, sprints y proyectos.
-
----
-
-## 📉 Objetivo
-
-Automatizar la recolección de datos de Jira para centralizar la información en BigQuery y consumirla desde Google Sheets, dashboards o herramientas de BI.
+Este proyecto implementa un pipeline **ETL** para extraer información de **Jira**, transformarla y cargarla en **BigQuery**, con el objetivo de habilitar reporting en **Looker / Power BI**.  
 
 ---
 
-## 🚀 Tecnologías utilizadas
-
-* Python 3.10+
-* BigQuery (Google Cloud)
-* Pandas
-* Google Cloud SDK
-* Jira REST API
-* dotenv
-* schedule (para ejecuciones programadas)
-* Discord Webhooks (para notificaciones)
-
----
-
-## 📦 Estructura del proyecto
-
-```plaintext
+## 📂 Estructura del proyecto
 Jira_Solu/
-├── etl/
-│   ├── extractor.py        # Obtención de datos desde la API
-│   ├── transformer.py      # Limpieza y normalización de datos
-│   └── loader.py           # Inserción de datos en BigQuery
-├── bigquery/
-│   ├── bigquery_func.py
-│   └── querys.py
-├── funciones/              # Módulos reutilizables por entidad
-├── schema/
-│   └── schemas.py         # Definición de los esquemas BQ
-├── utils/
-│   ├── logger.py           # Configuración de logging
-│   └── discord_notify.py  # Notificación por Discord
-├── credenciales/
-│   └── [clave-gcp].json   # Credenciales de servicio (gitignored)
-├── .env                    # Variables de entorno sensibles
-├── requirements.txt
-├── .gitignore
-└── main.py              # Orquestador principal del pipeline
-```
+│── bigquery/           # Funciones de conexión y queries (MERGE)
+│── etl/                # Extractor, Transformer, Loader (ETL)
+│── funciones/          # Conexiones específicas a APIs (Jira)
+│── schema/             # Definición de esquemas BigQuery
+│── utils/              # Logger y notificaciones
+│── credenciales/       # (Ignorado en git) JSON de servicio GCP
+│── main.py             # Script principal de orquestación
+│── .env.example        # Variables de entorno (plantilla)
+│── requirements.txt    # Dependencias Python
+│── README.md           # Este archivo
 
 ---
 
-## 🔧 Instalación y configuración
+## ⚙️ Configuración del entorno
 
-### 1. Crear entorno virtual:
+1. **Clonar el repo**  
+git clone <repo-url>
+cd Jira_Solu
 
-```bash
-python -m venv myenv
-myenv\Scripts\activate
-```
+2. **Crear entorno virtual**
+python -m venv venv
+source venv/bin/activate   # Linux/Mac
+venv\Scripts\activate      # Windows
 
-### 2. Instalar dependencias:
-
-```bash
+3. **Instalar dependencias**
 pip install -r requirements.txt
-```
 
-### 3. Variables de entorno:
+4.	**Configurar variables de entorno**
+Copiar el archivo de ejemplo y completarlo con tus credenciales:
 
-Crear un archivo `.env` con:
+cp .env.example .env
 
-```env
-mail = 
-API_TOKEN = 
-AUTHORIZATION = "Basic... "
+**🔑 Variables de entorno** (.env)
 
-PROJECT_ID = 
-DATASET_FINAL = 
-DATASET_TEMP = 
+PROJECT_ID=data-warehouse-311917
+DATASET_FINAL=Jira
+DATASET_TEMP=zt_Jira_temp
+BQ_LOCATION=US
 
-DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+JIRA_EMAIL=tu_email@dominio.com
+JIRA_API_TOKEN=xxxxxxxxxxxxxxxxxx
 
-```
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxx/yyy
 
-### 4. Configurar credenciales GCP:
+GOOGLE_APPLICATION_CREDENTIALS=./credenciales/data-warehouse-311917.json
 
-Ubicar el archivo de clave JSON en `./credenciales/` y referenciarlo en `main.py`:
+**▶️ Ejecución**
 
-```python
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./credenciales/clave.json"
-```
+Correr ETL manualmente
 
----
-
-## ⏱️ Ejecución
-
-### Manual:
-
-```bash
 python main.py
-```
 
-### Automática:
+Ejecución histórica
 
-El script usa `schedule` para mantener la ejecución corriendo en loop cada cierto tiempo. Se puede customizar por tipo de ejecución:
+python main.py --historico
 
-* Diaria
-* Semanal
-* Mensual
-* Histórica
+**🛠️ Componentes ETL**
+	•	Extractor: descarga proyectos, sprints y tickets desde Jira.
+	•	Transformer: limpia y normaliza los datos (ej. estimates a horas).
+	•	Loader: carga los datos en BigQuery (dataset temporal + MERGE).
 
----
-
-## 🚨 Notificaciones
-
-Si configurás `DISCORD_WEBHOOK_URL`, recibirás un resumen como este en tu canal:
-
-```
-**Resumen ETL Jira**
-✅ Projects: 45 filas procesadas
-✅ Sprints: 49 filas procesadas
-✅ Tickets: 184 filas procesadas
-⏱️ Duración total: 37.79 segundos
-```
-
----
-
-## 🔒 Seguridad
-
-* `.env` y `credenciales/` están ignorados por Git
-* Nunca se suben datos sensibles
-
----
-
-## 🌟 Mejores prácticas
-
-* Logging persistente en `etl.log`
-* Validación de datos antes de cargar
-* Actualización condicional en BigQuery (`IS DISTINCT FROM`)
-* Paginación de tickets y ejecución paralela
-
----
-
-## 📄 License
-
-MIT (o lo que decida el equipo)
-
----

@@ -1,31 +1,43 @@
-__pycache__/
+# ======================
+# Entorno Python
+# ======================
 venv/
-
-# Archivos sensibles
-.env
-credencialesbq.json
-data-warehouse-311917-73a0792225c7.json
-
-# Python cache
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
+*.pyd
+*.pytest_cache/
+*.coverage
+.cache/
+.mypy_cache/
+.dmypy.json
+.pyre/
 
-# Logs y archivos temporales
+# ======================
+# Configuración local
+# ======================
+.env
+.env.*
+!*.env.example
+
+# ======================
+# Credenciales y secretos
+# ======================
+credenciales/
+*.json
+*.pem
+*.key
+
+# ======================
+# Archivos temporales
+# ======================
+.DS_Store
 *.log
 *.tmp
-*.bak
+*.swp
 
-# Archivos de salida/exportación
-*.csv
-*.xlsx
-
-# Metadata de paquetes
-*.egg-info/
-
-# Configs de IDEs
+# ======================
+# IDEs
+# ======================
 .vscode/
 .idea/
-
-*.json
-

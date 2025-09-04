@@ -15,15 +15,23 @@ def get_bq_client() -> bigquery.Client:
     return bigquery.Client(project=project_id, location=location)
 
 def Get_BQ_service():
-    # Si usas credenciales de servicio locales:
-    credentials_path = "./credenciales/data-warehouse-311917-73a0792225c7.json"
-    if os.path.exists(credentials_path):
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
-    # Evitar gRPC si te da problemas en local
-    os.environ.setdefault("GOOGLE_CLOUD_DISABLE_GRPC", "True")
-
+    """
+    Retorna un cliente de BigQuery usando variables de entorno.
+    Requiere:
+      - PROJECT_ID
+      - BQ_LOCATION
+      - GOOGLE_APPLICATION_CREDENTIALS (opcional si ya configuraste ADC)
+    """
     project_id = os.getenv("PROJECT_ID")
-    return bigquery.Client(project=project_id)
+    location = os.getenv("BQ_LOCATION", "US")  # por defecto US
+
+    if not project_id:
+        raise RuntimeError("❌ Falta PROJECT_ID en el .env")
+
+    # Si definiste GOOGLE_APPLICATION_CREDENTIALS en el .env, Python ya lo toma
+    clientBQ = bigquery.Client(project=project_id, location=location)
+
+    return clientBQ
 
 # ---------------------------------
 # Carga genérica (DataFrame → BQ)
