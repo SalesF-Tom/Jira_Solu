@@ -1,5 +1,5 @@
 __pycache__/
-myenv/
+venv/
 
 # Archivos sensibles
 .env

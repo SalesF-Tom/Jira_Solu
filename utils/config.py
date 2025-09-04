@@ -1,33 +1,31 @@
 # utils/config.py
-from pydantic import BaseSettings, AnyHttpUrl, Field
-from functools import lru_cache
+import os
+from dataclasses import dataclass
+from dotenv import load_dotenv
 
-class Settings(BaseSettings):
-    # GCP/BQ
-    PROJECT_ID: str
-    BQ_LOCATION: str = "US"
-    BQ_DATASET_RAW: str
-    BQ_DATASET_TEMP: str
-    BQ_DATASET_SILVER: str
-    BQ_DATASET_GOLD: str
-    BQ_DATASET_META: str
+# Carga .env si existe (no es obligatorio)
+load_dotenv(override=False)
 
-    # Jira
-    JIRA_BASE_URL: AnyHttpUrl
-    JIRA_EMAIL: str
-    JIRA_API_TOKEN: str
+@dataclass(frozen=True)
+class Settings:
+    # === GCP / BigQuery ===
+    PROJECT_ID: str = os.getenv("PROJECT_ID", "data-warehouse-311917")
+    BQ_LOCATION: str = os.getenv("BQ_LOCATION", "US")
 
-    # Obs
-    DISCORD_WEBHOOK: AnyHttpUrl | None = None
-    LOG_LEVEL: str = Field(default="INFO", pattern="^(DEBUG|INFO|WARN|ERROR)$")
+    # === Jira (si aplica en este repo) ===
+    JIRA_BASE_URL: str = os.getenv("JIRA_BASE_URL", "")
+    JIRA_EMAIL: str = os.getenv("JIRA_EMAIL", "")
+    JIRA_API_TOKEN: str = os.getenv("JIRA_API_TOKEN", "")
 
-    # Env
-    ENV: str = Field(default="local", pattern="^(local|dev|prod)$")
+    # === Observabilidad (opcional) ===
+    DISCORD_WEBHOOK: str = os.getenv("DISCORD_WEBHOOK", "")
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    # === Credenciales GCP (opcional, SOLO si tu IT las usa con JSON) ===
+    GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
 
-@lru_cache
+_settings = Settings()
+
 def get_settings() -> Settings:
-    return Settings()  # levanta del .env o variables del sistema
+    """Acceso centralizado a la config (mantiene firma simple)."""
+    return _settings
