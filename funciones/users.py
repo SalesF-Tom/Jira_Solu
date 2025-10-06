@@ -54,7 +54,7 @@ def get_users(headers, filtro: str | None = None) -> pd.DataFrame:
                     "avatar_24x24": avatar_urls.get("24x24"),
                     "avatar_32x32": avatar_urls.get("32x32"),
                     "avatar_48x48": avatar_urls.get("48x48"),
-                    "group_names": _flatten_items(groups.get("items", [])),
+                    "groups": _flatten_items(groups.get("items", [])),
                     "application_roles": _flatten_items(application_roles.get("items", [])),
                 }
             )
