@@ -55,6 +55,6 @@ class Esquema(object):
         bigquery.SchemaField("avatar_24x24",        "STRING"),
         bigquery.SchemaField("avatar_32x32",        "STRING"),
         bigquery.SchemaField("avatar_48x48",        "STRING"),
-        bigquery.SchemaField("groups",              "STRING"),
+        bigquery.SchemaField("group_names",         "STRING"),
         bigquery.SchemaField("application_roles",   "STRING"),
     ]

@@ -126,7 +126,7 @@ def Merge_Data_Users_BQ(client: bigquery.Client, tabla_final: str, tabla_temp: s
             A.avatar_24x24       = B.avatar_24x24,
             A.avatar_32x32       = B.avatar_32x32,
             A.avatar_48x48       = B.avatar_48x48,
-            A.groups             = B.groups,
+            A.group_names        = B.group_names,
             A.application_roles  = B.application_roles
 
         WHEN NOT MATCHED THEN
@@ -145,7 +145,7 @@ def Merge_Data_Users_BQ(client: bigquery.Client, tabla_final: str, tabla_temp: s
             avatar_24x24,
             avatar_32x32,
             avatar_48x48,
-            groups,
+            group_names,
             application_roles
         )
         VALUES (
@@ -163,7 +163,7 @@ def Merge_Data_Users_BQ(client: bigquery.Client, tabla_final: str, tabla_temp: s
             B.avatar_24x24,
             B.avatar_32x32,
             B.avatar_48x48,
-            B.groups,
+            B.group_names,
             B.application_roles
         )
     """

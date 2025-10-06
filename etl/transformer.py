@@ -209,7 +209,7 @@ def clean_users(df: pd.DataFrame) -> pd.DataFrame:
         "avatar_24x24",
         "avatar_32x32",
         "avatar_48x48",
-        "groups",
+        "group_names",
         "application_roles",
     ]
     for col in str_cols:
