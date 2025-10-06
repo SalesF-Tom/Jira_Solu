@@ -76,16 +76,26 @@ def clean_tickets(df: pd.DataFrame) -> pd.DataFrame:
             df["ticket_original_estimate_seconds"] / 3600.0
         )
 
-    # Deduplicación: una fila por ticket_key (la más reciente por updated)
+    # Deduplicación: preferir fila con epic_name y updated más reciente por ticket+sprint
     if "ticket_updated" not in df.columns:
-        # si falta, lo creamos para no romper el sort; todo NaT
         df["ticket_updated"] = pd.NaT
 
+    dedup_subset = ["ticket_key"]
+    if "sprint_id" in df.columns:
+        dedup_subset.append("sprint_id")
+
+    df["__epic_present"] = df.get("epic_name", pd.Series(pd.NA, index=df.index)).fillna("") != ""
+
     df = (
-        df.sort_values(["ticket_key", "ticket_updated"], ascending=[True, False])
-          .drop_duplicates(subset=["ticket_key"], keep="first")
+        df.sort_values(
+            ["ticket_key", "__epic_present", "ticket_updated"],
+            ascending=[True, False, False],
+        )
+          .drop_duplicates(subset=dedup_subset, keep="first")
           .reset_index(drop=True)
     )
+
+    df = df.drop(columns=["__epic_present"], errors="ignore")
 
     return df
 
