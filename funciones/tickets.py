@@ -40,45 +40,109 @@ def fetch_epic_summary(epic_key: str, headers, cache: dict) -> str | None:
     cache[epic_key] = name
     return name
 
-def extract_epic_from_issue(fields: dict, epic_link_cf: str | None, headers, epic_cache: dict) -> tuple[str | None, str | None]:
-    """
-    Devuelve (epic_key, epic_name) cubriendo:
-      1) parent si es Epic
-      2) Epic Link (customfield_****) -> key; resolvemos name por API
-      3) fields['epic'] (team-managed)
-    """
+def _direct_epic_from_fields(
+    fields: dict,
+    epic_link_cf: str | None,
+    headers,
+    epic_cache: dict,
+) -> tuple[str | None, str | None]:
+    """Resuelve épica dentro de un bloque fields sin mirar jerarquía."""
     epic_key = None
     epic_name = None
 
-    # (1) Epic como parent (muy común en tu instancia)
-    parent = fields.get("parent")
-    if isinstance(parent, dict):
-        p_fields = parent.get("fields") or {}
-        p_type = ((p_fields.get("issuetype") or {}).get("name") or "").lower()
-        if p_type == "epic":
-            epic_key = parent.get("key") or parent.get("id")
-            epic_name = p_fields.get("summary")
-            if epic_key:
-                return epic_key, epic_name
-
-    # (2) Company-managed: Epic Link (customfield)
     if epic_link_cf:
         maybe_key = fields.get(epic_link_cf)
         if isinstance(maybe_key, str) and maybe_key:
             epic_key = maybe_key
 
-    # (3) Team-managed: objeto 'epic'
     if not epic_key:
         epic_obj = fields.get("epic")
         if isinstance(epic_obj, dict):
             epic_key = epic_obj.get("key") or epic_obj.get("id")
             epic_name = epic_obj.get("name")
 
-    # Si tengo key y no name, lo resuelvo por API
     if epic_key and not epic_name:
         epic_name = fetch_epic_summary(epic_key, headers, epic_cache)
 
     return epic_key, epic_name
+
+
+def _fetch_parent_fields(
+    parent_key: str,
+    headers,
+    epic_link_cf: str | None,
+    cache: dict,
+):
+    """Obtiene fields completos para un issue padre, con caché simple."""
+    if parent_key in cache:
+        return cache[parent_key]
+
+    fields_param = ["summary", "issuetype", "parent", "epic"]
+    if epic_link_cf:
+        fields_param.append(epic_link_cf)
+
+    try:
+        data = _get_json(
+            f"{JIRA_BASE}/rest/api/3/issue/{parent_key}",
+            headers,
+            params={"fields": ",".join(fields_param)},
+        )
+        cache[parent_key] = (data.get("fields") or {})
+    except Exception:
+        cache[parent_key] = {}
+
+    return cache[parent_key]
+
+
+def extract_epic_from_issue(
+    fields: dict,
+    epic_link_cf: str | None,
+    headers,
+    epic_cache: dict,
+    parent_issue_cache: dict,
+) -> tuple[str | None, str | None]:
+    """Devuelve (epic_key, epic_name) revisando el issue y su jerarquía de padres."""
+    # Intento directo sobre el issue
+    epic_key, epic_name = _direct_epic_from_fields(fields, epic_link_cf, headers, epic_cache)
+    if epic_key or epic_name:
+        return epic_key, epic_name
+
+    parent = fields.get("parent")
+    if not isinstance(parent, dict):
+        return None, None
+
+    parent_fields = parent.get("fields") or {}
+    parent_type = ((parent_fields.get("issuetype") or {}).get("name") or "").lower()
+    if parent_type == "epic":
+        epic_key = parent.get("key") or parent.get("id")
+        epic_name = parent_fields.get("summary")
+        return epic_key, epic_name
+
+    parent_key = parent.get("key") or parent.get("id")
+    if not parent_key:
+        return None, None
+
+    fetched_parent_fields = _fetch_parent_fields(parent_key, headers, epic_link_cf, parent_issue_cache)
+    if fetched_parent_fields:
+        epic_key, epic_name = _direct_epic_from_fields(
+            fetched_parent_fields,
+            epic_link_cf,
+            headers,
+            epic_cache,
+        )
+        if epic_key or epic_name:
+            return epic_key, epic_name
+
+        grandparent = fetched_parent_fields.get("parent")
+        if isinstance(grandparent, dict):
+            gp_fields = grandparent.get("fields") or {}
+            gp_type = ((gp_fields.get("issuetype") or {}).get("name") or "").lower()
+            if gp_type == "epic":
+                epic_key = grandparent.get("key") or grandparent.get("id")
+                epic_name = gp_fields.get("summary")
+                return epic_key, epic_name
+
+    return None, None
 
 
 # ----------------------
@@ -108,6 +172,7 @@ def get_tickets(headers, filtro: str = "diario") -> pd.DataFrame:
     # --- Detectar Epic Link (si existe) y preparar caché de épicas ---
     epic_link_cf = discover_epic_link_field_id(headers)  # ej. customfield_10014
     epic_cache: dict[str, str | None] = {}
+    parent_issue_cache: dict[str, dict] = {}
 
     # --- Sprints a procesar ---
     sprints_df = get_sprints(headers, filtro)
@@ -141,7 +206,13 @@ def get_tickets(headers, filtro: str = "diario") -> pd.DataFrame:
                 resolution = f.get("resolution")
 
                 # --- Epic detection (parent / Epic Link / fields.epic) ---
-                epic_key, epic_name = extract_epic_from_issue(f, epic_link_cf, headers, epic_cache)
+                epic_key, epic_name = extract_epic_from_issue(
+                    f,
+                    epic_link_cf,
+                    headers,
+                    epic_cache,
+                    parent_issue_cache,
+                )
 
                 rows.append({
                     "sprint_id": sprint_id,
