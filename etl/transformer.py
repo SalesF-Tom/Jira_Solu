@@ -76,26 +76,32 @@ def clean_tickets(df: pd.DataFrame) -> pd.DataFrame:
             df["ticket_original_estimate_seconds"] / 3600.0
         )
 
-    # Deduplicación: preferir fila con epic_name y updated más reciente por ticket+sprint
+    # Deduplicación: preferir fila con epic_name y updated más reciente por ticket
     if "ticket_updated" not in df.columns:
         df["ticket_updated"] = pd.NaT
 
-    dedup_subset = ["ticket_key"]
-    if "sprint_id" in df.columns:
-        dedup_subset.append("sprint_id")
-
     df["__epic_present"] = df.get("epic_name", pd.Series(pd.NA, index=df.index)).fillna("") != ""
+
+    if "sprint_id" in df.columns:
+        df["__sprint_sort"] = pd.to_numeric(df["sprint_id"], errors="coerce")
+    else:
+        df["__sprint_sort"] = pd.NA
 
     df = (
         df.sort_values(
-            ["ticket_key", "__epic_present", "ticket_updated"],
-            ascending=[True, False, False],
+            [
+                "ticket_key",
+                "__epic_present",
+                "ticket_updated",
+                "__sprint_sort",
+            ],
+            ascending=[True, False, False, False],
         )
-          .drop_duplicates(subset=dedup_subset, keep="first")
+          .drop_duplicates(subset=["ticket_key"], keep="first")
           .reset_index(drop=True)
     )
 
-    df = df.drop(columns=["__epic_present"], errors="ignore")
+    df = df.drop(columns=["__epic_present", "__sprint_sort"], errors="ignore")
 
     return df
 

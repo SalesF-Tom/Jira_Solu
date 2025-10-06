@@ -68,10 +68,10 @@ def Merge_Data_Tickets_BQ(client: bigquery.Client, tabla_final: str, tabla_temp:
         MERGE `{tabla_final}` A
         USING (SELECT DISTINCT * FROM `{tabla_temp}`) B
         ON A.ticket_id = B.ticket_id
-       AND A.sprint_id IS NOT DISTINCT FROM B.sprint_id
 
         WHEN MATCHED THEN
         UPDATE SET
+            A.sprint_id               = B.sprint_id,
             A.ticket_key                = B.ticket_key,
             A.ticket_summary            = B.ticket_summary,
             A.ticket_status             = B.ticket_status,
