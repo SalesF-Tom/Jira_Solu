@@ -16,11 +16,12 @@ from bigquery.querys import (
     Merge_Data_Projects_BQ,
     Merge_Data_Sprints_BQ,
     Merge_Data_Tickets_BQ,
+    Merge_Data_Users_BQ,
 )
 
 # ETL modular
-from etl.extractor import get_raw_projects, get_raw_sprints, get_raw_tickets
-from etl.transformer import clean_projects, clean_sprints, clean_tickets
+from etl.extractor import get_raw_projects, get_raw_sprints, get_raw_tickets, get_raw_users
+from etl.transformer import clean_projects, clean_sprints, clean_tickets, clean_users
 from etl.loader import cargar_entidad
 
 # Logger y notificaciones
@@ -85,6 +86,14 @@ ENTIDADES = [
         "schema": Esquema.schema_tickets,
         "tabla_final": "tbl_jira_tickets",
         "merge_func": Merge_Data_Tickets_BQ,
+    },
+    {
+        "nombre": "Users",
+        "extract": get_raw_users,
+        "transform": clean_users,
+        "schema": Esquema.schema_users,
+        "tabla_final": "tbl_jira_users",
+        "merge_func": Merge_Data_Users_BQ,
     },
 ]
 

@@ -181,3 +181,48 @@ def clean_projects(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     return df
+
+
+def clean_users(df: pd.DataFrame) -> pd.DataFrame:
+    """Normaliza el catálogo de usuarios de Jira antes de cargarlo en BigQuery."""
+    if df is None or df.empty:
+        return df
+
+    df = df.copy()
+
+    if "account_id" not in df.columns:
+        df["account_id"] = pd.NA
+
+    df = df[df["account_id"].notna()]
+
+    str_cols: List[str] = [
+        "account_id",
+        "account_type",
+        "account_status",
+        "display_name",
+        "public_name",
+        "email_address",
+        "time_zone",
+        "locale",
+        "self_url",
+        "avatar_16x16",
+        "avatar_24x24",
+        "avatar_32x32",
+        "avatar_48x48",
+        "groups",
+        "application_roles",
+    ]
+    for col in str_cols:
+        if col in df.columns:
+            df[col] = _to_str(df[col])
+
+    if "active" in df.columns:
+        df["active"] = df["active"].fillna(False).astype(bool)
+
+    df = (
+        df.sort_values(["account_id"], ascending=True)
+        .drop_duplicates(subset=["account_id"], keep="last")
+        .reset_index(drop=True)
+    )
+
+    return df

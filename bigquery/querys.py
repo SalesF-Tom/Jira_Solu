@@ -103,3 +103,73 @@ def Merge_Data_Tickets_BQ(client: bigquery.Client, tabla_final: str, tabla_temp:
     mb = (job.estimated_bytes_processed or 0) / (1024 * 1024)
     print(f"Bytes facturados: {mb:.2f} MB")
     return mb
+
+
+def Merge_Data_Users_BQ(client: bigquery.Client, tabla_final: str, tabla_temp: str):
+    merge_query = f"""
+        MERGE `{tabla_final}` A
+        USING (SELECT DISTINCT * FROM `{tabla_temp}`) B
+        ON A.account_id = B.account_id
+
+        WHEN MATCHED THEN
+        UPDATE SET
+            A.account_type       = B.account_type,
+            A.account_status     = B.account_status,
+            A.display_name       = B.display_name,
+            A.public_name        = B.public_name,
+            A.email_address      = B.email_address,
+            A.active             = B.active,
+            A.time_zone          = B.time_zone,
+            A.locale             = B.locale,
+            A.self_url           = B.self_url,
+            A.avatar_16x16       = B.avatar_16x16,
+            A.avatar_24x24       = B.avatar_24x24,
+            A.avatar_32x32       = B.avatar_32x32,
+            A.avatar_48x48       = B.avatar_48x48,
+            A.`groups`           = B.`groups`,
+            A.application_roles  = B.application_roles
+
+        WHEN NOT MATCHED THEN
+        INSERT (
+            account_id,
+            account_type,
+            account_status,
+            display_name,
+            public_name,
+            email_address,
+            active,
+            time_zone,
+            locale,
+            self_url,
+            avatar_16x16,
+            avatar_24x24,
+            avatar_32x32,
+            avatar_48x48,
+            `groups`,
+            application_roles
+        )
+        VALUES (
+            B.account_id,
+            B.account_type,
+            B.account_status,
+            B.display_name,
+            B.public_name,
+            B.email_address,
+            B.active,
+            B.time_zone,
+            B.locale,
+            B.self_url,
+            B.avatar_16x16,
+            B.avatar_24x24,
+            B.avatar_32x32,
+            B.avatar_48x48,
+            B.`groups`,
+            B.application_roles
+        )
+    """
+    job = client.query(merge_query)
+    job.result()
+    print(f"\033[35m Se actualizaron {job.num_dml_affected_rows} filas en {tabla_final}. \033[0m")
+    mb = (job.estimated_bytes_processed or 0) / (1024 * 1024)
+    print(f"Bytes facturados: {mb:.2f} MB")
+    return mb

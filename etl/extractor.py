@@ -52,3 +52,15 @@ def get_raw_projects(headers: Dict[str, str], filtro: ValidFiltro = "diario") ->
     except Exception as e:
         print(f"[extractor] Error get_raw_projects({filtro}): {e}")
         return pd.DataFrame()
+
+
+def get_raw_users(headers: Dict[str, str], filtro: ValidFiltro = "diario") -> pd.DataFrame:
+    """Devuelve usuarios de Jira (no aplica filtro temporal)."""
+    from funciones.users import get_users  # import diferido
+
+    try:
+        df = get_users(headers, filtro)
+        return df if isinstance(df, pd.DataFrame) else pd.DataFrame()
+    except Exception as e:
+        print(f"[extractor] Error get_raw_users({filtro}): {e}")
+        return pd.DataFrame()
