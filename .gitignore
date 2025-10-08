@@ -2,6 +2,7 @@
 # Entorno Python
 # ======================
 venv/
+myenv/
 __pycache__/
 *.pyc
 *.pyo
@@ -41,3 +42,7 @@ credenciales/
 # ======================
 .vscode/
 .idea/
+
+
+
+notas.txt
